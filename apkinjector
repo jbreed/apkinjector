@@ -129,8 +129,8 @@ echo "Signed the .apk file with ~/.android/debug.keystore"\
 echo "Simply remove the debug.keystore file and re-run the program to be prompted to create a new debug key"\
 echo\
 echo "Cleaning up"\
-#rm -rf /tmp/payload\
-#rm -rf /tmp/original\
+rm -rf /tmp/payload\
+rm -rf /tmp/original\
 rm /tmp/output\
 rm /tmp/output_1\
 echo "Finished"\
