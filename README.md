@@ -6,6 +6,9 @@ Android APK Antivirus evasion for msfvenom generated payloads to inject into ano
 <br>
 <b>CURRENTLY NEEDS WORK. Tested against 2 apps with no issues. On the 3rd app the grep was unable to locate the MAIN function smali launcher in AndroidManifest.xml. Need to refine this, or simple allow the user to copy/paste the smali path into the code to automate from that point</b>
 <br><br>
+Plan to use something like the following: grep -B 3 -A 2 android.intent.action.MAIN /tmp/original/AndroidManifest.xml <br>
+Just need to implement it. Will get to it soon.<br>
+<br><br>
 <b>Setup:</b><br>
 chmod +x apkinjector<br>
 mv apkinjector /usr/local/bin/.<br>
