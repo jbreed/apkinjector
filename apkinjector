@@ -63,6 +63,7 @@ launcherSmali=`cat /tmp/output_1`.smali
 if [ \! -s /tmp/output_1 ]; then 
     echo -e "\033[31m Was unable to locate the .smali launcher in AndroidManifest.xml with the current grep command in place \x1B[0m"
     echo "Checkout line 57 in apkinjector"
+    echo "Also verify the command given was 'apkpayload <payload>.apk <original>.apk'
     echo "Look for the MAIN function in AndroidManifest.xml located in /tmp/original. The .smali file used in that section is the line you want to grab"
     exit 1
 fi
