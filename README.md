@@ -4,7 +4,7 @@ Android APK Antivirus evasion for msfvenom generated payloads to inject into ano
 <b> -- Please do not upload "injected" files to VirusTotal.com -- </b><br>
 <br>
 <br>
-<b>Verified with 3 apps to work, but the automated injection on Facebook was unable to locate the .smali file to inject into. After this, I found there can be many differences between each package so allowing for manual input of the .smali to inject into was needed. Needs further testing, debugging, and refining. As of right now, it still appears to get the job done.</b>
+<b>Verified automatic injection on 3/4 apps it was tested against. The automated injection on Facebook was unable to locate the .smali file to inject into. With this, I went ahead and added a manual entry for the .smali file with output to assist in finding it.</b>
 <br><br>
 <b>Setup:</b><br>
 chmod +x apkinjector<br>
