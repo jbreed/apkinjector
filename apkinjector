@@ -179,7 +179,7 @@ echo -e "\033[34m Simply remove the debug.keystore file and re-run the program t
 echo
 echo -e "\033[34m Cleaning up \x1B[0m"
 rm -rf /tmp/payload
-#rm -rf /tmp/original
+rm -rf /tmp/original
 rm /tmp/output
 rm /tmp/output_1
 echo -e "\033[32m Finished! \x1B[0m"
