@@ -16,7 +16,7 @@ mv apkinjector /usr/local/bin/.<br>
 <b>NOTE:</b> If wanting to customize each signature, then remove the keystore before running the script.<br>
 <br>
 <b>Usage:</b><br>
-apktool \<payload>.apk \<original>.apk<br>
+apkinjector \<payload>.apk \<original>.apk<br>
 <br>
 <b>Input:</b><br>
 This script takes a msfgenerated payload as input along with an .apk you want to inject into.<br>
