@@ -4,7 +4,12 @@ Android APK Antivirus evasion for msfvenom generated payloads to inject into ano
 <b> -- Please do not upload "injected" files to VirusTotal.com -- </b><br>
 <br>
 <br>
-<b>Still a work in progress. If having to manually locate the .smali file that is launched with the app, then you are looking for the MAIN and LAUNCHER calls and the .smali reference will be above it that you can use for manually pointing to it. Still working on automating it every time. If still having issues, then manually utilize APKTool on the .apk file to decomile, then recompile it. If it doesn't recompile, then the script will not work anyways. For debugging be sure to comment out the removal of the /tmp/original directory so you can review the files to see what happened. </b>
+<b>Success Rate:</b><br>
+-100% AV Evasion to date (0/35 on nodistribute, confirmed on AVG and Kaspersky mobile)<br>
+-~70% automatic injection<br>
+-May require user input, or manually adding the invoke command. The output will explain what is needed.<
+-If APKTool fails to decompile, or compile, then the injection will fail. On major apps like Facebook, Starbucks, etc you may find this to happen.<br>
+<br>
 <br><br>
 <b>Setup:</b><br>
 chmod +x apkinjector<br>
@@ -33,3 +38,4 @@ Verified for Kaspersky mobile<br>
 <br>
 <b>Debugging</b><br>
 Comment out the removal of the /tmp/payload and /tmp/original directories to see the file structure that was compiled.<br>
+
