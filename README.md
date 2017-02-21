@@ -7,7 +7,7 @@ Android APK Antivirus evasion for msfvenom generated payloads to inject into ano
 <b>Success Rate:</b><br>
 -100% AV Evasion to date (0/35 on nodistribute, confirmed on AVG and Kaspersky mobile)<br>
 -~70% automatic injection<br>
--May require user input, or manually adding the invoke command. The output will explain what is needed.<
+-May require user input, or manually adding the invoke command. The output will explain what is needed.<br>
 -If APKTool fails to decompile, or compile, then the injection will fail. On major apps like Facebook, Starbucks, etc you may find this to happen.<br>
 <br>
 <br><br>
