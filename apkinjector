@@ -62,7 +62,7 @@ cp -r /tmp/payload/smali/com/$VAR1 /tmp/original/smali/com/.
 lineNumber=`grep -n -A 1 android.intent.action.MAIN /tmp/original/AndroidManifest.xml | grep android.intent.category.LAUNCHER | cut -d- -f1`
 let lineNumber-=1
 echo -e "\033[34m Line number of AndroidManifest.xml MAIN: $lineNumber \x1B[0m"
-until [  $lineNumber -eq 1 ] || [[ ! -z "${smaliFile// }" ]]; do
+until [  $lineNumber -lt 2 ] || [[ ! -z "${smaliFile// }" ]]; do
     smaliFile=`sed -n "$lineNumber p" /tmp/original/AndroidManifest.xml | grep android:label=\"@string/app_name\" | grep android:name=\"`
     let lineNumber-=1
 done
