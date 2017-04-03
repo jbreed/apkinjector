@@ -1,4 +1,7 @@
 # apkinjector
+
+### This script is no longer supported. Please use APKWash. ###
+<br><br>
 Android APK Antivirus evasion for msfvenom generated payloads to inject into another APK file for phishing attacks.
 <br><br>
 <b> -- Please do not upload "injected" files to VirusTotal.com -- </b><br>
